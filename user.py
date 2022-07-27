@@ -6,16 +6,16 @@ class User:
     def __init__(self, _id, username, password):
         self.id = _id
         self.username = username
-        self.passowrd = password
+        self.password = password
 
     @classmethod
     def find_by_username(cls, username):
 
-        connection = sqlite3.connect('house.db')
+        connection = sqlite3.connect('houses.db')
         cursor = connection.cursor()
 
-        search_query = ''''
-            SELECT * FROM houses WHERE username = ?
+        search_query = '''
+            SELECT * FROM users WHERE username=?
         '''
 
         result = cursor.execute(search_query, (username,))
@@ -24,7 +24,7 @@ class User:
         if row is not None:
             user = cls(row[0], row[1], row[2])
         else:
-            return None
+            user = None
 
         connection.close()
         return user
@@ -32,11 +32,11 @@ class User:
     @classmethod
     def find_by_id(cls, _id):
 
-        connection = sqlite3.connect('house.db')
+        connection = sqlite3.connect('houses.db')
         cursor = connection.cursor()
 
-        search_query = ''''
-            SELECT * FROM houses WHERE id = ?
+        search_query = '''
+            SELECT * FROM users WHERE id = ?
         '''
 
         result = cursor.execute(search_query, (_id,))
@@ -45,41 +45,41 @@ class User:
         if row is not None:
             user = cls(row[0], row[1], row[2])
         else:
-            return None
+            user = None
 
         connection.close()
         return user
 
-    class UserRegister(Resource):
-        parser = reqparse.RequestParser()
-        parser.add_argument('username',
-                            type=str,
-                            required=True,
-                            help="This field cannot be left blank"
-                            )
-        parser.add_argument('password',
-                            type=str,
-                            required=True,
-                            help="This field cannot be left blank"
-                            )
 
-        def post(self):
-            data = UserRegister.parser.parse_args()
+class UserRegister(Resource):
+    parser = reqparse.RequestParser()
+    parser.add_argument('username',
+                        type=str,
+                        required=True,
+                        help="This field cannot be left blank")
+    parser.add_argument('password',
+                        type=str,
+                        required=True,
+                        help="This field cannot be left blank"
+                        )
 
-            if User.find_by_username(data['username']) is not None:
-                return {"message": "This username already exists"}, 400
+    def post(self):
+        data = UserRegister.parser.parse_args()
 
-            connection = sqlite3.connect('houses.db')
-            cursor = connection.cursor()
+        if User.find_by_username(data['username']) is not None:
+            return {"message": "This username already exists"}, 400
 
-            insert_query = '''
-                INSERT INTO houses
+        connection = sqlite3.connect('houses.db')
+        cursor = connection.cursor()
+
+        insert_query = '''
+                INSERT INTO users
                 VALUES (NULL,?,?)
             '''
 
-            cursor.execute(insert_query, (data['username'], data['password']))
+        cursor.execute(insert_query, (data['username'], data['password']))
 
-            connection.commit()
-            connection.close()
+        connection.commit()
+        connection.close()
 
-            return {"message": "User bas been created sucessfully"}, 201
+        return {"message": "User bas been created sucessfully"}, 201
