@@ -116,6 +116,9 @@ class House(Resource):
                 WHERE name=?
             '''
         cursor.execute(delete_query, (name,))
+
+        connection.commit()
+        connection.close()
         return {"message": f"{name} has been deleted from the database"}
 
 
