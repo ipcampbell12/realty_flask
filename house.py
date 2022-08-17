@@ -64,20 +64,8 @@ class House(Resource):
                      }
                     }
 
-    @jwt_required()
-    def post(self, name):
-        if self.find_by_name(name) is not None:
-            return {"message": f"A house with the name {name} already exists"}
-
-        data = House.parser.parse_args()
-        house = {
-            "name": name,
-            "address": data['address'],
-            "price": data['price'],
-            "square_feet": data['square_feet'],
-            "beds": data['beds'],
-            "baths": data['baths'],
-        }
+    @classmethod
+    def insert(cls, house):
 
         connection = sqlite3.connect('houses.db')
         cursor = connection.cursor()
@@ -101,10 +89,44 @@ class House(Resource):
         connection.commit()
         connection.close()
 
+    @jwt_required()
+    def post(self, name):
+        if self.find_by_name(name) is not None:
+            return {"message": f"A house with the name {name} already exists"}
+
+        data = House.parser.parse_args()
+        house = {
+            "name": name,
+            "address": data['address'],
+            "price": data['price'],
+            "square_feet": data['square_feet'],
+            "beds": data['beds'],
+            "baths": data['baths'],
+        }
+
+        try:
+            self.insert(house)
+        except:
+            return {"Message": "An error occurred when inserting the house"}, 500
+
         return house, 201
 
-    def put(self, name):
-        pass
+    def put(self, house):
+        data = House.parser.parse_args()
+
+        if house is None:
+            try:
+                self.insert(house)
+            except:
+                {"Message": f"A house with the name {house} could not be found."}
+
+        else:
+            try:
+                self.update(house)
+            except:
+                {"Message": f"A house with the name {house} could not be found."}
+
+        return house
 
     def delete(self, name):
 
@@ -120,6 +142,34 @@ class House(Resource):
         connection.commit()
         connection.close()
         return {"message": f"{name} has been deleted from the database"}
+
+    def update(self, house):
+        connection = sqlite3.connect('houses.db')
+        cursor = connection.cursor()
+
+        query = '''
+        UPDATE houses
+        SET address = ?,
+        SET price = ?,
+        SET square_feet = ?,
+        SET beds = ?,
+        SET baths = ?,
+        WHERE name = ?
+        '''
+
+        cursor.execute(insert_query,
+                       (
+                           house['name'],
+                           house['address'],
+                           house['price'],
+                           house['square_feet'],
+                           house['beds'],
+                           house['baths']
+                       )
+                       )
+
+        connection.commit()
+        connection.close()
 
 
 class Houses(Resource):
