@@ -111,22 +111,33 @@ class House(Resource):
 
         return house, 201
 
-    def put(self, house):
+    @jwt_required()
+    def put(self, name):
         data = House.parser.parse_args()
+
+        house = self.find_by_name(name)
+        updated_item = {
+            "name": name,
+            "address": data['address'],
+            "price": data['price'],
+            "square_feet": data['square_feet'],
+            "beds": data['beds'],
+            "baths": data['baths'],
+        }
 
         if house is None:
             try:
-                self.insert(house)
+                self.insert(updated_item)
             except:
                 {"Message": f"A house with the name {house} could not be found."}
 
         else:
             try:
-                self.update(house)
+                self.update(updated_item)
             except:
                 {"Message": f"A house with the name {house} could not be found."}
 
-        return house
+        return updated_item
 
     def delete(self, name):
 
@@ -149,17 +160,16 @@ class House(Resource):
 
         query = '''
         UPDATE houses
-        SET address = ?,
-        SET price = ?,
-        SET square_feet = ?,
-        SET beds = ?,
-        SET baths = ?,
-        WHERE name = ?
+        SET address =?,
+        SET price =?,
+        SET square_feet =?,
+        SET beds =?,
+        SET baths =?
+        WHERE name =?
         '''
 
-        cursor.execute(insert_query,
+        cursor.execute(query,
                        (
-                           house['name'],
                            house['address'],
                            house['price'],
                            house['square_feet'],
@@ -173,8 +183,32 @@ class House(Resource):
 
 
 class Houses(Resource):
-    def get(self, houses):
-        pass
+    def get(self):
+
+        connection = sqlite3.connect('houses.db')
+        cursor = connection.cursor()
+
+        query = '''
+        SELECT * FROM houses
+        '''
+
+        result = cursor.execute(query)
+
+        houses = []
+
+        for row in result:
+            houses.append({
+                'name': row[0],
+                'address': row[1],
+                'price': row[2],
+                'square_feet': row[3],
+                'beds': row[4],
+                'baths': row[5]
+            })
+
+        connection.close()
+
+        return {'houses': houses}
 
 
 """ 
