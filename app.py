@@ -4,7 +4,7 @@ from flask_restful import Api
 from flask_jwt import JWT
 from security import authenticate, identity
 from user import UserRegister
-from house import House, Houses
+from house import House, Houses, House_Stats
 
 app = Flask(__name__)
 app.secret_key = 'Ian'
@@ -16,6 +16,7 @@ jwt = JWT(app, authenticate, identity)
 api.add_resource(House, '/house/<string:name>')
 api.add_resource(Houses, '/houses')
 api.add_resource(UserRegister, '/register')
+api.add_resource(House_Stats, '/sum/<property>')
 
 
 if __name__ == '__main__':

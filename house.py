@@ -210,18 +210,24 @@ class Houses(Resource):
 
         return {'houses': houses}
 
-
-""" 
-{
-    "address":"456 Potty lane",
-    "price":45000,
-    "squater_feet":120,
-    "beds":12,
-    "basths:15
-
-}
+# would need to be a different resource
 
 
+# need to add ressource to API!
+# cursor object is not serializable, you need to return the row!
+class House_Stats(Resource):
 
+    def get(self, property):
+        connection = sqlite3.connect('houses.db')
+        cursor = connection.cursor()
 
-"""
+        query = '''
+            SELECT SUM(?) FROM houses
+            '''
+
+        sum = cursor.execute(query, (property,))
+        result = sum.fetchone()
+
+        connection.close()
+
+        return {"result": result}
